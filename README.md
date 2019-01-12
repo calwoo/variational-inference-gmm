@@ -22,5 +22,7 @@ is generally a difficult beast to compute. In the cases where the prior `p(z)` i
 
 We will often instead opt to compute an easier lower bound to the posterior we are trying to compute. This lower bound is called the elbo (derivation in attached notes).
 
-``
+`log p(x) >= E[log p(x,z)] - E[log q(z)]`
+
+
 
