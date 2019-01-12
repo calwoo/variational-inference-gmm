@@ -20,4 +20,7 @@ is generally a difficult beast to compute. In the cases where the prior `p(z)` i
 
 ### the elbo and vi to the rescue
 
-We will often instead opt to compute an easier lower bound to the posterior we are trying to compute.
+We will often instead opt to compute an easier lower bound to the posterior we are trying to compute. This lower bound is called the elbo (derivation in attached notes).
+
+``
+
