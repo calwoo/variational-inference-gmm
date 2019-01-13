@@ -4,18 +4,17 @@ import seaborn as sns
 
 # data set
 N = 300
-cluster = 3
+clusters = 3
 means = np.array([2, 5, 9])
-stds = np.array([1, 1.5, 0.8])
 
-def generate_data(N, clusters, means, stds):
+def generate_data(N, clusters, means):
     data = []
     for i in range(clusters):
-        cluster_data = np.random.normal(means[i], stds[i], N)
+        cluster_data = np.random.normal(means[i], 1, N)
         data.append(cluster_data)
     return np.concatenate(np.array(data))
 
-data = generate_data(N, cluster, means, stds)
+data = generate_data(N, clusters, means)
 
 # plot the data
 fix, ax = plt.subplots(figsize=(12,3))
@@ -31,7 +30,7 @@ class Model:
         self.n = data.shape[0]
         self.sigma = sigma
         # get model parameters-- these are the things CAVI will update to max ELBO
-        self.varphi = np.random.dirichlet(np.randon.random(self.K), self.n)
+        self.varphi = np.random.dirichlet(np.random.random(self.K), self.n)
         self.m = np.random.randint(low=np.min(self.data), high=np.max(self.data), size=self.K).astype(float)
         self.s2 = np.random.random(self.K)
 
@@ -50,14 +49,14 @@ class Model:
         e1 = np.outer(self.data, self.m)
         e2 = -0.5 * (self.m**2 + self.s2)
         e = e1 + e2[np.newaxis, :]
-        self.varphi = np.exp(e) / np.sum(np.exp(e), axis=1)
+        self.varphi = np.exp(e) / np.sum(np.exp(e), axis=1)[:, np.newaxis]
         # cavi m update
         self.m = np.sum(self.data[:, np.newaxis] * self.varphi, axis=0)
         self.m /= (1.0 / self.sigma**2 + np.sum(self.varphi, axis=0))
         # cavi s2 update
-        self.s2 = (1.0 / self.sigma**2 + np.sum(self.varphi, axis=0))**(-1)
+        self.s2 = 1.0 / (1.0 / self.sigma**2 + np.sum(self.varphi, axis=0))
 
-    def train(self, epsilon, iters=100):
+    def train(self, epsilon=1e-5, iters=100):
         elbo_record = []
         elbo_record.append(self.elbo())
         
@@ -70,8 +69,25 @@ class Model:
             if i % 5 == 0:
                 print("elbo is: ", elbo_record[i])
             if np.abs(elbo_record[-1] - elbo_record[-2]) <= epsilon:
-                print("converged!")
+                print("converged after %d steps!" % i)
                 break
-        
+        return elbo_record
 
-    
+model = Model(data, clusters)
+elbo_record = model.train()
+
+# plot final parameters
+assignments = model.varphi.argmax(1)
+converged_means = model.m
+print("final means are ", sorted(converged_means))
+print("model means are ", sorted(means))
+
+fix, ax = plt.subplots(figsize=(12,3))
+sns.distplot(data[:N], color='green', rug=True)
+sns.distplot(data[N:2*N], color='orange', rug=True)
+sns.distplot(data[2*N:], color='red', rug=True)
+# plot modelled gaussians
+sns.distplot(np.random.normal(converged_means[0], 1, 1000), color='black', hist=False)
+sns.distplot(np.random.normal(converged_means[1], 1, 1000), color='black', hist=False)
+sns.distplot(np.random.normal(converged_means[2], 1, 1000), color='black', hist=False)
+plt.show() 
