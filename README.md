@@ -24,5 +24,7 @@ We will often instead opt to compute an easier lower bound to the posterior we a
 
 `log p(x) >= E[log p(x,z)] - E[log q(z)]`
 
+### a picture of the resulting gaussian mixture model
 
+![gmm](./results/mixture.png)
 
